@@ -1,0 +1,35 @@
+name: 'Reoclo Docker Auth'
+description: 'Log in to a container registry on a Reoclo-managed server using a vaulted credential'
+branding:
+  icon: 'lock'
+  color: 'blue'
+inputs:
+  api_key:
+    description: 'Reoclo automation API key'
+    required: true
+  server_id:
+    description: 'Target server ID'
+    required: true
+  credential_id:
+    description: 'Reoclo registry credential UUID (from Registry Credentials → Use in CI)'
+    required: true
+  cleanup:
+    description: 'Run docker logout in a post-step at job end'
+    required: false
+    default: 'true'
+  api_url:
+    description: 'Reoclo API URL (for self-hosted instances)'
+    required: false
+    default: 'https://api.reoclo.com'
+outputs:
+  operation_id:
+    description: 'Reoclo automation operation ID for the login'
+  registry_url:
+    description: 'Resolved registry URL (ghcr.io, docker.io, ECR host, etc.)'
+  registry_type:
+    description: 'Registry provider (docker_hub, ghcr, aws_ecr, ...)'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+  post: 'dist/post/index.js'
+  post-if: always()
