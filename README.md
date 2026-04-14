@@ -1,17 +1,17 @@
 # Reoclo Docker Auth (`@reoclo/docker-auth`)
 
-Log in to a container registry on a [Reoclo](https://reoclo.com)-managed server using a registry credential stored in Reoclo's tenant-scoped vault.
+Log in to a container registry on a [Reoclo](https://reoclo.com)-managed server using a registry credential stored in your Reoclo tenant.
 
-Pairs with [`@reoclo/run`](https://github.com/reoclo/run) and [`@reoclo/checkout`](https://github.com/reoclo/checkout) — orchestrate deployments from GitHub Actions while Reoclo holds the registry secrets.
+Pairs with [`@reoclo/run`](https://github.com/reoclo/run) and [`@reoclo/checkout`](https://github.com/reoclo/checkout) for full CI workflows that build, push, and pull from private registries without copying passwords into GitHub Secrets.
 
 ## Why
 
-Most registry-login GitHub Actions (including `docker/login-action@v3`) require you to copy the registry password into GitHub Secrets per-repo. `@reoclo/docker-auth` sources the password from Reoclo's vault instead:
+Most registry login GitHub Actions require you to copy the registry password into a GitHub Actions secret for every repository that needs it. `@reoclo/docker-auth` sources the password from your Reoclo tenant instead, so you get:
 
-- **Central rotation** — rotate once in Reoclo, every workflow picks up the new value on next run.
-- **Per-tenant ACLs** — scope each automation API key to the exact set of credentials and servers it may touch.
-- **Envelope encryption at rest** — credentials are AES-256-GCM encrypted; decryption happens only inside Reoclo's worker process, never in the API layer or on the GitHub runner.
-- **Audit trail** — every login and logout is recorded with the originating GitHub repo, workflow, actor, SHA, and ref.
+- **One place to rotate.** Update the password in the Reoclo dashboard and every workflow picks up the new value on the next run.
+- **Per-key access control.** Scope each automation API key to exactly the credentials and servers it is allowed to use.
+- **Full audit trail.** Every login and logout is recorded with the originating repository, workflow, actor, and commit.
+- **No copies of your password in GitHub Secrets.** The credential never leaves your Reoclo tenant.
 
 ## Quick Start
 
@@ -44,49 +44,51 @@ jobs:
           timeout: 600
 ```
 
-The login runs on the **Reoclo-managed server**, not on the GitHub runner — so subsequent `@reoclo/run` steps that build, push, or pull from that registry work without extra plumbing. The post-step automatically runs `docker logout <registry>` at job end.
+The login happens on your Reoclo server, so your next `@reoclo/run` steps can build, push, or pull from the same registry without any extra plumbing. When the job ends, a cleanup step automatically logs out.
 
 ## Setup
 
-1. **Create a registry credential in Reoclo**
-   - Navigate to **Registry Credentials → Add Credential**.
-   - Pick a provider (Docker Hub, GHCR, AWS ECR, Google Artifact Registry, Azure ACR, Harbor, or Generic).
-   - Enter the username + password / token / JSON key.
-   - Copy the credential UUID from the detail page.
-2. **Create an Automation API key**
-   - Navigate to **API Keys → Automation Keys → Create Key**.
-   - Add `registry_login` (and optionally `registry_logout`) to the key's allowed operations.
-   - Add the server ID(s) the key may target to `allowed_server_ids`.
-   - Add the credential UUID from step 1 to `allowed_credential_ids`.
-   - Save and copy the plaintext key (shown once).
-3. **Add the secrets to GitHub Actions**
-   - `REOCLO_API_KEY` — the automation key from step 2.
-   - `REOCLO_SERVER_ID` — the target server's UUID.
-   - `REOCLO_<NAME>_CREDENTIAL_ID` — one per registry credential you want to use.
+1. **Create a registry credential in Reoclo.**
+   1. Open **Registry Credentials** in the dashboard.
+   2. Click **Add Credential** and pick your provider (Docker Hub, GitHub Container Registry, AWS ECR, Google Artifact Registry, Azure ACR, Harbor, or Generic).
+   3. Enter the username and password or token for that provider.
+   4. Save and copy the credential UUID from the detail page.
+2. **Create an Automation API key.**
+   1. Open **API Keys** and switch to the **Automation Keys** tab.
+   2. Click **Create Key** and give it a name (for example, `github-prod`).
+   3. Set **Allowed Operations** to include `registry_login` (and `registry_logout` for the cleanup step).
+   4. Set **Allowed Servers** to the target server.
+   5. Set **Allowed Credentials** to include the credential from step 1.
+   6. Save and copy the plaintext key. It is shown once.
+3. **Add the secrets to your GitHub repository.**
+   1. `REOCLO_API_KEY`: the automation key you just created.
+   2. `REOCLO_SERVER_ID`: the UUID of your Reoclo server.
+   3. `REOCLO_<NAME>_CREDENTIAL_ID`: one per registry credential you plan to use.
 
-The fastest way to get the exact YAML snippet is the **Use in CI** button on the Registry Credentials page in the dashboard — it pre-fills the credential and server UUIDs for you.
+The fastest way to get the exact snippet is the **Use in CI** button on the Registry Credentials page. It pre-fills the credential and server UUIDs for you.
 
 ## Inputs
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
-| `api_key` | yes | - | Reoclo automation API key (starts with `rca_`) |
-| `server_id` | yes | - | Target Reoclo server UUID (must be a runner-connected server) |
-| `credential_id` | yes | - | Reoclo registry credential UUID |
-| `cleanup` | no | `true` | Run `docker logout <registry>` in a post-step at job end |
-| `api_url` | no | `https://api.reoclo.com` | Reoclo API URL (for self-hosted instances) |
+| `api_key` | Yes |  | Reoclo automation API key (starts with `rca_`). |
+| `server_id` | Yes |  | Target Reoclo server UUID. |
+| `credential_id` | Yes |  | Reoclo registry credential UUID. |
+| `cleanup` | No | `true` | Run `docker logout` on the target server at job end. |
 
 ## Outputs
 
 | Output | Description |
 |--------|-------------|
-| `operation_id` | Reoclo automation operation ID for the login |
-| `registry_url` | Resolved registry URL (e.g. `ghcr.io`, `docker.io`, `123456789.dkr.ecr.us-east-1.amazonaws.com`) |
-| `registry_type` | Registry provider (`docker_hub`, `ghcr`, `aws_ecr`, `google_artifact_registry`, `azure_acr`, `harbor`, `generic`) |
+| `operation_id` | Reoclo operation ID for the login. Useful for cross-referencing the audit log. |
+| `registry_url` | Resolved registry URL (for example, `ghcr.io`, `docker.io`, or the ECR host). |
+| `registry_type` | Registry provider (`docker_hub`, `ghcr`, `aws_ecr`, `google_artifact_registry`, `azure_acr`, `harbor`, `generic`). |
 
 ## Examples
 
 ### Log in to multiple registries
+
+Use one step per credential. Each step creates its own login and logout in the audit log, which keeps failures scoped to a single credential.
 
 ```yaml
 - name: Log in to GHCR
@@ -104,9 +106,9 @@ The fastest way to get the exact YAML snippet is the **Use in CI** button on the
     credential_id: ${{ secrets.REOCLO_ECR_CREDENTIAL_ID }}
 ```
 
-Each invocation creates its own login + logout operation in the audit log, keeping failures scoped to a single credential.
-
 ### Opt out of automatic logout
+
+Use this when the credential should persist across multiple jobs in the same workflow run. Not recommended for ephemeral runners.
 
 ```yaml
 - uses: reoclo/docker-auth@v1
@@ -115,19 +117,6 @@ Each invocation creates its own login + logout operation in the audit log, keepi
     server_id: ${{ secrets.REOCLO_SERVER_ID }}
     credential_id: ${{ secrets.REOCLO_CREDENTIAL_ID }}
     cleanup: 'false'
-```
-
-Use this when the credential should persist across multiple jobs in the same workflow run. Not recommended for ephemeral runners.
-
-### Self-hosted Reoclo instance
-
-```yaml
-- uses: reoclo/docker-auth@v1
-  with:
-    api_key: ${{ secrets.REOCLO_API_KEY }}
-    server_id: ${{ secrets.REOCLO_SERVER_ID }}
-    credential_id: ${{ secrets.REOCLO_CREDENTIAL_ID }}
-    api_url: https://reoclo.internal.company.com
 ```
 
 ### Capture the resolved registry URL
@@ -151,23 +140,21 @@ Use this when the credential should persist across multiple jobs in the same wor
 
 ## How It Works
 
-1. The action calls `POST /api/automation/v1/registry-auth/login` with the server and credential UUIDs.
-2. Reoclo's API enqueues a worker job (the API process itself never touches the plaintext credential).
-3. A worker handler decrypts the credential (for AWS ECR, also exchanges it for a short-lived token), builds a `docker login ... --password-stdin` command, and dispatches it to the target server via the runner RPC.
-4. The action polls the operation endpoint every 5 seconds until it completes.
-5. On success, the action saves state (registry URL, server, API info) for the post-step.
-6. At job end, the post-step calls `POST /api/automation/v1/registry-auth/logout` which runs `docker logout <registry>` on the server.
+1. The action calls the Reoclo API with the server ID and the credential ID.
+2. Reoclo logs in to the registry on your server.
+3. The action waits for the login to finish and sets `registry_url`, `registry_type`, and `operation_id` as outputs.
+4. Subsequent workflow steps on the same server can pull or push from the registry.
+5. When the job ends, the action runs `docker logout` on the server so the login does not persist.
 
-Every operation is audited with the originating repository, workflow, actor, SHA, and ref.
+Every step is recorded in your Reoclo audit log along with the GitHub workflow context.
 
 ## Security
 
-- **Password never in process args** — Docker CLI is invoked with `--password-stdin`, so the secret never appears in `ps`, shell history, or runner trace output.
-- **Password never in API process** — decryption happens only in Reoclo's worker, per the existing `deploy/registry_auth.py` policy.
-- **Password never in MongoDB** — `AutomationOperation.request_params` stores only the credential UUID, name, registry URL, and type.
-- **Password never in GitHub logs** — only `operation_id`, `registry_url`, and `registry_type` are returned to the action; stderr is scrubbed to drop lines containing the username before it's returned.
-- **Password never in audit log** — audit metadata mirrors the non-sensitive identifiers.
-- **Per-key ACL** — automation keys must explicitly allow-list each credential UUID; cross-tenant references are rejected at create/update time.
+- The registry password is never returned to the GitHub Actions runner.
+- The action's outputs contain only the resolved registry URL, the registry provider type, and a Reoclo operation ID.
+- Logins and logouts are recorded in your Reoclo audit log alongside the repository, workflow, actor, and commit that triggered them.
+- Automation API keys must explicitly allow each credential they can use. Keys cannot reference credentials outside your tenant.
+- If you enable cleanup (the default), `docker logout` runs on the server at job end so the credential does not stay resident on the server filesystem.
 
 ## License
 
