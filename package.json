@@ -1,0 +1,21 @@
+{
+  "name": "@reoclo/docker-auth",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Log in to a container registry on a Reoclo-managed server using a vaulted credential",
+  "scripts": {
+    "build": "ncc build src/index.ts -o dist --source-map --license licenses.txt && ncc build src/post.ts -o dist/post --source-map",
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.0",
+    "@actions/http-client": "^2.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vercel/ncc": "^0.38.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.0"
+  }
+}
