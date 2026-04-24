@@ -25769,7 +25769,7 @@ async function run() {
         const serverId = core.getInput("server_id", { required: true });
         const credentialId = core.getInput("credential_id", { required: true });
         const cleanup = (core.getInput("cleanup") || "true") !== "false";
-        const apiUrl = core.getInput("api_url") || "https://api.reoclo.com/mcp";
+        const apiUrl = core.getInput("api_url") || "https://api.reoclo.com";
         const client = new client_js_1.ReocloClient(apiKey, apiUrl);
         core.info(`Logging in to Reoclo registry credential ${credentialId}...`);
         const loginResponse = await client.loginRegistry({
