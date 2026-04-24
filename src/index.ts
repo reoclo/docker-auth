@@ -20,7 +20,7 @@ async function run(): Promise<void> {
     const serverId = core.getInput("server_id", { required: true });
     const credentialId = core.getInput("credential_id", { required: true });
     const cleanup = (core.getInput("cleanup") || "true") !== "false";
-    const apiUrl = core.getInput("api_url") || "https://api.reoclo.com";
+    const apiUrl = core.getInput("api_url") || "https://api.reoclo.com/mcp";
 
     const client = new ReocloClient(apiKey, apiUrl);
 

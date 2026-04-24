@@ -20,7 +20,7 @@ inputs:
   api_url:
     description: 'Reoclo API URL (for self-hosted instances)'
     required: false
-    default: 'https://api.reoclo.com'
+    default: 'https://api.reoclo.com/mcp'
 outputs:
   operation_id:
     description: 'Reoclo automation operation ID for the login'
