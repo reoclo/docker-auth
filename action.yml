@@ -1,5 +1,5 @@
 name: 'Reoclo Docker Auth'
-description: 'Log in to a container registry on a Reoclo-managed server using a vaulted credential'
+description: 'Log in to a container registry on a Reoclo managed server using a vaulted credential'
 branding:
   icon: 'lock'
   color: 'blue'
@@ -11,7 +11,7 @@ inputs:
     description: 'Target server ID'
     required: true
   credential_id:
-    description: 'Reoclo registry credential UUID (from Registry Credentials → Use in CI)'
+    description: 'Reoclo registry credential UUID (from Registry Credentials > Use in CI)'
     required: true
   cleanup:
     description: 'Run docker logout in a post-step at job end'
