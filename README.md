@@ -41,6 +41,29 @@ jobs:
 
 The login happens on your Reoclo server, so your next `@reoclo/run` steps can build, push, or pull from the same registry without any extra plumbing. When the job ends, a cleanup step automatically logs out.
 
+## Passthrough Mode
+
+Passthrough mode lets you supply a registry username and access token directly instead of referencing a vaulted credential. This is useful for:
+
+- **Ephemeral tokens** that cannot be vaulted ahead of time — for example, `${{ secrets.GITHUB_TOKEN }}` for GHCR, or a short-lived ECR token from `aws ecr get-login-password`.
+- **Bootstrap / onboarding** — trying the action before creating a Reoclo registry credential.
+- **Hybrid CI flows** where registry auth is managed by another team and you just need to relay the resolved token to your Reoclo server.
+
+```yaml
+- name: Log in to GHCR with ephemeral token
+  uses: reoclo/docker-auth@v1
+  with:
+    api_key: ${{ secrets.REOCLO_API_KEY }}
+    server_id: ${{ secrets.REOCLO_SERVER_ID }}
+    username: ${{ github.actor }}
+    access_token: ${{ secrets.GITHUB_TOKEN }}
+    registry_url: ghcr.io
+```
+
+The token is masked in workflow logs via `core.setSecret()` immediately on read, before any other code path can log it. The Reoclo API encrypts it at the boundary and carries only the ciphertext through to the worker; the plaintext token is never written to logs, the operation row, or the audit log.
+
+The `credential_id` and passthrough fields (`username`, `access_token`, `registry_url`) are mutually exclusive. Providing both is an error. Providing only some of the passthrough fields is also an error — all three are required when using passthrough mode.
+
 ## Setup
 
 1. Create a registry credential in Reoclo. Open **Registry Credentials** in the dashboard, click **Add Credential**, pick your provider (Docker Hub, GitHub Container Registry, AWS ECR, Google Artifact Registry, Azure ACR, Harbor, or Generic), enter the username and password or token, save, and copy the credential UUID from the detail page.
@@ -53,8 +76,12 @@ The login happens on your Reoclo server, so your next `@reoclo/run` steps can bu
 |-------|----------|---------|-------------|
 | `api_key` | yes | - | Reoclo automation API key |
 | `server_id` | yes | - | Target server ID |
-| `credential_id` | yes | - | Reoclo registry credential UUID |
+| `credential_id` | Conditional | - | Reoclo registry credential UUID (vault mode). Required unless using passthrough mode. |
+| `username` | Conditional | - | Registry username (passthrough mode). Provide together with `access_token` and `registry_url`. |
+| `access_token` | Conditional | - | Registry access token or password (passthrough mode). Masked in logs immediately on read. |
+| `registry_url` | Conditional | - | Registry URL for passthrough mode, e.g. `ghcr.io` or an ECR host. |
 | `cleanup` | no | `true` | Run docker logout in a post-step at job end |
+| `api_url` | no | `https://api.reoclo.com` | Reoclo API URL (for self-hosted instances) |
 
 ## Outputs
 
@@ -121,6 +148,18 @@ The login happens on your Reoclo server, so your next `@reoclo/run` steps can bu
 - The runner agent receives the password over an encrypted channel and feeds it to `docker login --password-stdin`.
 - Both login and logout are recorded in the Reoclo audit log with the originating repository, workflow, actor, and commit.
 - API keys can be scoped to specific operations (`registry_login`, `registry_logout`) and specific servers, so a leaked key from one workflow cannot pivot to other servers or actions.
+
+### Choosing a mode
+
+| | Vault mode (`credential_id`) | Passthrough mode (`username` + `access_token` + `registry_url`) |
+|---|---|---|
+| **Where the password lives** | Encrypted in your Reoclo tenant; never in GitHub Secrets or workflow logs. | In a GitHub Actions secret (or generated at runtime). Travels from the runner to the Reoclo API over HTTPS, then as ciphertext through the job queue to the worker. |
+| **Token rotation** | Rotate once in the Reoclo dashboard; all workflows pick up the new value automatically. | Rotate in GitHub Secrets (or update the upstream source). |
+| **Ephemeral / auto-issued tokens** | Not supported — the token must be vaulted before the workflow runs. | Supported — pass `${{ secrets.GITHUB_TOKEN }}` or any runtime-resolved token directly. |
+| **Audit log** | Logs `auth_mode: vault` alongside the operation. | Logs `auth_mode: passthrough` and the username. The token itself is never logged. |
+| **Automation key requirement** | Key must have the credential in its `allowed_credentials` list. | Key must have `allow_registry_passthrough` enabled (set via the dashboard or `PATCH /api-keys/{id}`). |
+
+**Recommendation:** use vault mode for stable, long-lived credentials. Use passthrough mode for ephemeral tokens (GHCR `GITHUB_TOKEN`, ECR OIDC tokens) or during initial onboarding before you have a vaulted credential set up.
 
 ## License
 
