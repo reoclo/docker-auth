@@ -17,5 +17,11 @@
     "@vercel/ncc": "^0.38.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "undici": ">=7.18.2 <8.0.0",
+      "postcss": ">=8.5.10"
+    }
   }
 }
