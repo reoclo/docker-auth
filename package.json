@@ -1,6 +1,6 @@
 {
   "name": "@reoclo/docker-auth",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Log in to a container registry on a Reoclo-managed server using a vaulted credential",
   "scripts": {
