@@ -70,6 +70,8 @@ The `credential_id` and passthrough fields (`username`, `access_token`, `registr
 2. Create an Automation API key. Open **API Keys**, switch to the **Automation Keys** tab, click **Create Key**, and give it a name (for example, `github-prod`). Set **Allowed Operations** to include `registry_login` and `registry_logout`. Set **Allowed Servers** to the target server.
 3. Add the API key and credential UUID as GitHub Actions secrets: `REOCLO_API_KEY`, `REOCLO_SERVER_ID`, `REOCLO_GHCR_CREDENTIAL_ID` (or whatever name fits your registry).
 
+> **Tip:** open a credential's detail page and click **Use in CI** to copy a pre-filled GitHub Actions snippet. The sheet offers two tabs — **Vault credential** (default) and **Passthrough token** — so you can pick the mode that fits your workflow without writing the YAML by hand.
+
 ## Inputs
 
 | Input | Required | Default | Description |
