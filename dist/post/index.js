@@ -25675,6 +25675,17 @@ class ReocloClient {
         }
         return response.result;
     }
+    async loginRegistryDirect(request) {
+        const url = `${this.baseUrl}/api/automation/v1/registry-auth/login-direct`;
+        const response = await this.http.postJson(url, request);
+        if (response.statusCode !== 202 && response.statusCode !== 200) {
+            throw new Error(`Reoclo API returned ${response.statusCode}: ${JSON.stringify(response.result)}`);
+        }
+        if (!response.result) {
+            throw new Error("Reoclo API returned empty response");
+        }
+        return response.result;
+    }
     async logoutRegistry(request) {
         const url = `${this.baseUrl}/api/automation/v1/registry-auth/logout`;
         const response = await this.http.postJson(url, request);
