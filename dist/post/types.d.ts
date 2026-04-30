@@ -13,6 +13,14 @@ export interface RegistryLoginRequest {
     run_id?: string;
     run_context?: RunContext;
 }
+export interface RegistryLoginDirectRequest {
+    server_id: string;
+    registry_url: string;
+    username: string;
+    access_token: string;
+    run_id?: string;
+    run_context?: RunContext;
+}
 export interface RegistryLoginResponse {
     operation_id: string;
     status: string;

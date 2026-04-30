@@ -40145,6 +40145,17 @@ class ReocloClient {
         }
         return response.result;
     }
+    async loginRegistryDirect(request) {
+        const url = `${this.baseUrl}/api/automation/v1/registry-auth/login-direct`;
+        const response = await this.http.postJson(url, request);
+        if (response.statusCode !== 202 && response.statusCode !== 200) {
+            throw new Error(`Reoclo API returned ${response.statusCode}: ${JSON.stringify(response.result)}`);
+        }
+        if (!response.result) {
+            throw new Error("Reoclo API returned empty response");
+        }
+        return response.result;
+    }
     async logoutRegistry(request) {
         const url = `${this.baseUrl}/api/automation/v1/registry-auth/logout`;
         const response = await this.http.postJson(url, request);
@@ -40220,6 +40231,8 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = run;
+exports.resolveAuthMode = resolveAuthMode;
 const core = __importStar(__nccwpck_require__(6966));
 const client_js_1 = __nccwpck_require__(8039);
 function buildRunContext() {
@@ -40233,26 +40246,77 @@ function buildRunContext() {
         ref: process.env["GITHUB_REF"],
     };
 }
+function resolveAuthMode(credentialId, username, accessToken, registryUrl) {
+    const hasCredential = credentialId !== "";
+    const passthroughFields = { username, access_token: accessToken, registry_url: registryUrl };
+    const setPassthrough = Object.entries(passthroughFields).filter(([, v]) => v !== "");
+    const hasAnyPassthrough = setPassthrough.length > 0;
+    const hasAllPassthrough = setPassthrough.length === 3;
+    if (hasCredential && hasAnyPassthrough) {
+        throw new Error("credential_id and passthrough fields are mutually exclusive. Provide one mode, not both.");
+    }
+    if (!hasCredential && !hasAnyPassthrough) {
+        throw new Error("Provide either credential_id (vault mode) OR username + access_token + registry_url (passthrough mode).");
+    }
+    if (!hasCredential && hasAnyPassthrough && !hasAllPassthrough) {
+        const missing = Object.entries(passthroughFields)
+            .filter(([, v]) => v === "")
+            .map(([k]) => k)
+            .join(", ");
+        throw new Error(`Passthrough mode requires all three: username, access_token, registry_url. Missing: ${missing}.`);
+    }
+    return { mode: hasCredential ? "vault" : "passthrough" };
+}
 async function run() {
     try {
         const apiKey = core.getInput("api_key", { required: true });
         const serverId = core.getInput("server_id", { required: true });
-        const credentialId = core.getInput("credential_id", { required: true });
+        const credentialId = core.getInput("credential_id");
+        const username = core.getInput("username");
+        // Mask the access token immediately before any other code path can log it
+        const accessToken = core.getInput("access_token");
+        if (accessToken) {
+            core.setSecret(accessToken);
+        }
+        const registryUrl = core.getInput("registry_url");
         const cleanup = (core.getInput("cleanup") || "true") !== "false";
         const apiUrl = core.getInput("api_url") || "https://api.reoclo.com";
+        const { mode } = resolveAuthMode(credentialId, username, accessToken, registryUrl);
         const client = new client_js_1.ReocloClient(apiKey, apiUrl);
-        core.info(`Logging in to Reoclo registry credential ${credentialId}...`);
-        const loginResponse = await client.loginRegistry({
-            server_id: serverId,
-            credential_id: credentialId,
-            run_id: process.env["GITHUB_RUN_ID"],
-            run_context: buildRunContext(),
-        });
-        core.setOutput("operation_id", loginResponse.operation_id);
-        core.setOutput("registry_url", loginResponse.registry_url);
-        core.setOutput("registry_type", loginResponse.registry_type);
-        core.info(`Operation ${loginResponse.operation_id} submitted, polling for completion...`);
-        const detail = await client.pollUntilComplete(loginResponse.operation_id, (update) => {
+        let loginOperationId;
+        let loginRegistryUrl;
+        let loginRegistryType;
+        if (mode === "vault") {
+            core.info(`Logging in to Reoclo registry credential ${credentialId}...`);
+            const loginResponse = await client.loginRegistry({
+                server_id: serverId,
+                credential_id: credentialId,
+                run_id: process.env["GITHUB_RUN_ID"],
+                run_context: buildRunContext(),
+            });
+            loginOperationId = loginResponse.operation_id;
+            loginRegistryUrl = loginResponse.registry_url;
+            loginRegistryType = loginResponse.registry_type;
+        }
+        else {
+            core.info(`Logging in to ${registryUrl} via passthrough mode...`);
+            const loginResponse = await client.loginRegistryDirect({
+                server_id: serverId,
+                registry_url: registryUrl,
+                username,
+                access_token: accessToken,
+                run_id: process.env["GITHUB_RUN_ID"],
+                run_context: buildRunContext(),
+            });
+            loginOperationId = loginResponse.operation_id;
+            loginRegistryUrl = loginResponse.registry_url;
+            loginRegistryType = loginResponse.registry_type;
+        }
+        core.setOutput("operation_id", loginOperationId);
+        core.setOutput("registry_url", loginRegistryUrl);
+        core.setOutput("registry_type", loginRegistryType);
+        core.info(`Operation ${loginOperationId} submitted, polling for completion...`);
+        const detail = await client.pollUntilComplete(loginOperationId, (update) => {
             core.info(`Operation status: ${update.status}`);
         });
         const result = detail.result ?? {};
@@ -40265,13 +40329,13 @@ async function run() {
             core.setFailed(`docker login failed with exit code ${exitCode}`);
             return;
         }
-        core.info(`Logged in to ${loginResponse.registry_url} on server ${serverId}`);
+        core.info(`Logged in to ${loginRegistryUrl} on server ${serverId}`);
         // Wire the post step — only after a successful login
         core.saveState("login_performed", "true");
         core.saveState("server_id", serverId);
         core.saveState("api_key", apiKey);
         core.saveState("api_url", apiUrl);
-        core.saveState("registry_url", loginResponse.registry_url);
+        core.saveState("registry_url", loginRegistryUrl);
         core.saveState("cleanup", cleanup ? "true" : "false");
     }
     catch (error) {
@@ -40279,7 +40343,10 @@ async function run() {
         core.setFailed(`docker-auth failed: ${message}`);
     }
 }
-run();
+// Only auto-run when executed directly (not when imported by tests)
+if (process.env["VITEST"] !== "true") {
+    run();
+}
 
 
 /***/ }),

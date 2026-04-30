@@ -11,8 +11,17 @@ inputs:
     description: 'Target server ID'
     required: true
   credential_id:
-    description: 'Reoclo registry credential UUID (from Registry Credentials > Use in CI)'
-    required: true
+    description: 'Reoclo registry credential UUID (vault mode). Conditional: required unless using passthrough mode.'
+    required: false
+  username:
+    description: 'Registry username (passthrough mode). Provide together with access_token and registry_url.'
+    required: false
+  access_token:
+    description: 'Registry access token or password (passthrough mode). Masked in logs immediately on read.'
+    required: false
+  registry_url:
+    description: 'Registry URL (passthrough mode), e.g. ghcr.io or 123456789.dkr.ecr.us-east-1.amazonaws.com.'
+    required: false
   cleanup:
     description: 'Run docker logout in a post-step at job end'
     required: false

@@ -1,6 +1,7 @@
 import { HttpClient } from "@actions/http-client";
 import type {
   OperationDetail,
+  RegistryLoginDirectRequest,
   RegistryLoginRequest,
   RegistryLoginResponse,
   RegistryLogoutRequest,
@@ -24,6 +25,20 @@ export class ReocloClient {
 
   async loginRegistry(request: RegistryLoginRequest): Promise<RegistryLoginResponse> {
     const url = `${this.baseUrl}/api/automation/v1/registry-auth/login`;
+    const response = await this.http.postJson<RegistryLoginResponse>(url, request);
+    if (response.statusCode !== 202 && response.statusCode !== 200) {
+      throw new Error(
+        `Reoclo API returned ${response.statusCode}: ${JSON.stringify(response.result)}`,
+      );
+    }
+    if (!response.result) {
+      throw new Error("Reoclo API returned empty response");
+    }
+    return response.result;
+  }
+
+  async loginRegistryDirect(request: RegistryLoginDirectRequest): Promise<RegistryLoginResponse> {
+    const url = `${this.baseUrl}/api/automation/v1/registry-auth/login-direct`;
     const response = await this.http.postJson<RegistryLoginResponse>(url, request);
     if (response.statusCode !== 202 && response.statusCode !== 200) {
       throw new Error(
