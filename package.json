@@ -1,7 +1,8 @@
 {
   "name": "@reoclo/docker-auth",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
+  "type": "module",
   "description": "Log in to a container registry on a Reoclo-managed server using a vaulted credential",
   "scripts": {
     "build": "ncc build src/index.ts -o dist --source-map --license licenses.txt && ncc build src/post.ts -o dist/post --source-map",
@@ -9,8 +10,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@actions/core": "^1.11.0",
-    "@actions/http-client": "^2.2.0"
+    "@actions/core": "^3.0.1",
+    "@actions/http-client": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
@@ -20,7 +21,6 @@
   },
   "pnpm": {
     "overrides": {
-      "undici": ">=7.18.2 <8.0.0",
       "postcss": ">=8.5.10"
     }
   }

@@ -38,7 +38,7 @@ outputs:
   registry_type:
     description: 'Registry provider (docker_hub, ghcr, aws_ecr, ...)'
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'dist/index.js'
   post: 'dist/post/index.js'
   post-if: always()
