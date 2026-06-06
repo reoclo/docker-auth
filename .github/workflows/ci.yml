@@ -1,0 +1,50 @@
+name: ci
+# Regression guard. `test` builds + unit-tests the JS action and verifies the
+# committed dist/ is in sync with src/. `smoke` runs the real action with dummy
+# credentials so it installs the pinned reoclo CLI (then fails cleanly at auth)
+# and asserts the CLI ended up on PATH — catching install regressions like the
+# bash-only install.sh that broke under sh/dash.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - name: dist/ is in sync with src/ (rebuild and diff)
+        run: |
+          pnpm run build
+          git diff --exit-code -- dist \
+            || { echo "dist/ is stale — run 'pnpm run build' and commit"; exit 1; }
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: run the action (installs CLI, then fails on the dummy key)
+        id: act
+        continue-on-error: true
+        uses: ./
+        with:
+          api_key: dummy-not-an-rca-key
+          server_id: 00000000-0000-0000-0000-000000000000
+          credential_id: dummy-credential
+
+      - name: the CLI must have been installed by the action
+        run: |
+          set -e
+          command -v reoclo
+          reoclo --version
