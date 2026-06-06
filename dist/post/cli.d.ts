@@ -1,4 +1,4 @@
-declare const REOCLO_VERSION = "0.44.0";
+declare const REOCLO_VERSION = "0.44.1";
 interface RunResult {
     status: number;
     stdout: string;

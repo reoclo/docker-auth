@@ -30935,12 +30935,12 @@ const external_node_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(impo
 
 
 
-const REOCLO_VERSION = "0.44.0";
+const REOCLO_VERSION = "0.44.1";
 const REOCLO_PIN = `v${REOCLO_VERSION}`;
 const INSTALL_URL = `https://github.com/reoclo/cli/releases/download/${REOCLO_PIN}/install.sh`;
 // SHA-256 of the pinned release's install.sh (stable across releases). Verified
 // before execution; the installer then verifies the binary against SHA256SUMS.
-const INSTALL_SHA256 = "2ea6c2766d2cf5def9a022ed255874f9a48ce1da5184a36df9e8e547a98cfa94";
+const INSTALL_SHA256 = "a1ac3c97e6965078dec9115e14f20a6731ba03b079c92ce81140491a9eff1cce";
 /**
  * Run a command with an explicit argv array (never a shell string), so secrets
  * passed as arguments cannot be interpolated by a shell or leak via shell tracing.
