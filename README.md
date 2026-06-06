@@ -4,6 +4,8 @@ Log in to a container registry on a [Reoclo](https://reoclo.com) managed server 
 
 Pairs with [`@reoclo/run`](https://github.com/reoclo/run) and [`@reoclo/checkout`](https://github.com/reoclo/checkout) for full CI workflows that build, push, and pull from private registries without copying passwords into GitHub Secrets.
 
+> **v2 wraps the `reoclo` CLI.** As of `@v2`, this action is a thin wrapper around the published [`reoclo` CLI](https://github.com/reoclo/cli) (pinned to `v0.43.1`). On first run it installs the pinned CLI into `$RUNNER_TEMP` and then shells out to `reoclo registry login`/`reoclo registry logout`. It remains a JavaScript action (not composite) so the automatic `docker logout` cleanup can run as a `post:` step. Inputs, outputs, and behavior are unchanged from `@v1`.
+
 ## Why
 
 Most registry login GitHub Actions require you to copy the registry password into a GitHub Actions secret for every repository that needs it. `@reoclo/docker-auth` sources the password from your Reoclo tenant instead, so you get:
@@ -21,14 +23,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Log in to private GHCR
-        uses: reoclo/docker-auth@v1
+        uses: reoclo/docker-auth@v2
         with:
           api_key: ${{ secrets.REOCLO_API_KEY }}
           server_id: ${{ secrets.REOCLO_SERVER_ID }}
           credential_id: ${{ secrets.REOCLO_GHCR_CREDENTIAL_ID }}
 
       - name: Build and push on server
-        uses: reoclo/run@v1
+        uses: reoclo/run@v2
         with:
           api_key: ${{ secrets.REOCLO_API_KEY }}
           server_id: ${{ secrets.REOCLO_SERVER_ID }}
@@ -51,7 +53,7 @@ Passthrough mode lets you supply a registry username and access token directly i
 
 ```yaml
 - name: Log in to GHCR with ephemeral token
-  uses: reoclo/docker-auth@v1
+  uses: reoclo/docker-auth@v2
   with:
     api_key: ${{ secrets.REOCLO_API_KEY }}
     server_id: ${{ secrets.REOCLO_SERVER_ID }}
@@ -99,14 +101,14 @@ The `credential_id` and passthrough fields (`username`, `access_token`, `registr
 
 ```yaml
 - name: Log in to GHCR
-  uses: reoclo/docker-auth@v1
+  uses: reoclo/docker-auth@v2
   with:
     api_key: ${{ secrets.REOCLO_API_KEY }}
     server_id: ${{ secrets.REOCLO_SERVER_ID }}
     credential_id: ${{ secrets.REOCLO_GHCR_CREDENTIAL_ID }}
 
 - name: Log in to Docker Hub
-  uses: reoclo/docker-auth@v1
+  uses: reoclo/docker-auth@v2
   with:
     api_key: ${{ secrets.REOCLO_API_KEY }}
     server_id: ${{ secrets.REOCLO_SERVER_ID }}
@@ -116,7 +118,7 @@ The `credential_id` and passthrough fields (`username`, `access_token`, `registr
 ### Opt out of automatic logout
 
 ```yaml
-- uses: reoclo/docker-auth@v1
+- uses: reoclo/docker-auth@v2
   with:
     api_key: ${{ secrets.REOCLO_API_KEY }}
     server_id: ${{ secrets.REOCLO_SERVER_ID }}
@@ -128,7 +130,7 @@ The `credential_id` and passthrough fields (`username`, `access_token`, `registr
 
 ```yaml
 - id: login
-  uses: reoclo/docker-auth@v1
+  uses: reoclo/docker-auth@v2
   with:
     api_key: ${{ secrets.REOCLO_API_KEY }}
     server_id: ${{ secrets.REOCLO_SERVER_ID }}
@@ -137,12 +139,27 @@ The `credential_id` and passthrough fields (`username`, `access_token`, `registr
 - run: echo "Logged into ${{ steps.login.outputs.registry_url }}"
 ```
 
+## Gitea Actions
+
+This action also runs on [Gitea Actions](https://docs.gitea.com/usage/actions/overview) via `act_runner`. Because the runner may not ship Node 24, the action targets the `node20` runtime. Reference it from the Reoclo Gitea mirror:
+
+```yaml
+- name: Log in to private GHCR
+  uses: git.boxpositron.dev/reoclo/docker-auth@v2
+  with:
+    api_key: ${{ secrets.REOCLO_API_KEY }}
+    server_id: ${{ secrets.REOCLO_SERVER_ID }}
+    credential_id: ${{ secrets.REOCLO_GHCR_CREDENTIAL_ID }}
+```
+
+The cleanup `post:` step (automatic `docker logout`) and all inputs/outputs behave identically to GitHub Actions.
+
 ## How It Works
 
-1. The action posts to `POST /api/automation/v1/registry-auth/login` with your credential UUID.
-2. The Reoclo API resolves the credential, looks up the target server, and dispatches a `docker login` to the runner agent on that server.
-3. The runner executes the login locally on the server. The password never leaves your Reoclo tenant.
-4. On job end, the post-step posts to `POST /api/automation/v1/registry-auth/logout` to clean up.
+1. On first run, the action installs the pinned `reoclo` CLI (`v0.43.1`) into `$RUNNER_TEMP` and adds it to `PATH`. If the pinned version is already present it is reused.
+2. The action shells out to `reoclo registry login <server_id>` (with `--credential <uuid>` for vault mode, or `--username/--access-token/--registry-url` for passthrough mode), authenticating via the `REOCLO_AUTOMATION_KEY` and `REOCLO_API_URL` environment variables. Arguments are passed as an argv array, never a shell string, so the access token never touches a shell command line.
+3. The CLI calls the Reoclo API, which resolves the credential, looks up the target server, and dispatches a `docker login` to the runner agent on that server. The runner executes the login locally — the password never leaves your Reoclo tenant.
+4. On job end, the `post:` step runs `reoclo registry logout <server_id> --registry-url <resolved url>` to clean up. Cleanup is best-effort: a logout failure logs a warning but never fails the job.
 
 ## Security
 

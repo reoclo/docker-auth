@@ -1,18 +1,5 @@
 import * as core from "@actions/core";
-import { ReocloClient } from "./client.js";
-import type { RunContext } from "./types.js";
-
-function buildRunContext(): RunContext {
-  return {
-    provider: "github_actions",
-    repository: process.env["GITHUB_REPOSITORY"] ?? "",
-    workflow: process.env["GITHUB_WORKFLOW"] ?? "",
-    trigger: process.env["GITHUB_EVENT_NAME"] ?? "",
-    actor: process.env["GITHUB_ACTOR"] ?? "",
-    sha: process.env["GITHUB_SHA"],
-    ref: process.env["GITHUB_REF"],
-  };
-}
+import { ensureCli, runReoclo } from "./cli.js";
 
 async function post(): Promise<void> {
   if (core.getState("login_performed") !== "true") {
@@ -34,17 +21,28 @@ async function post(): Promise<void> {
     return;
   }
 
+  // Re-mask the api_key defensively in the post step's log context.
+  core.setSecret(apiKey);
+
   try {
-    const client = new ReocloClient(apiKey, apiUrl);
-    await client.logoutRegistry({
-      server_id: serverId,
-      registry_url: registryUrl,
-      run_id: process.env["GITHUB_RUN_ID"],
-      run_context: buildRunContext(),
-    });
+    ensureCli();
+    const env: NodeJS.ProcessEnv = {
+      ...process.env,
+      REOCLO_AUTOMATION_KEY: apiKey,
+      REOCLO_API_URL: apiUrl,
+    };
+    const result = runReoclo(
+      ["registry", "logout", serverId, "--registry-url", registryUrl],
+      env,
+    );
+    if (result.status !== 0) {
+      const detail = (result.stderr || result.stdout).trim();
+      core.warning(`docker-auth cleanup failed (exit ${result.status}): ${detail}`);
+      return;
+    }
     core.info(`Logged out of ${registryUrl}`);
   } catch (error) {
-    // Cleanup failure should never fail the job — matches actions/cache convention
+    // Cleanup failure should never fail the job — matches actions/cache convention.
     const message = error instanceof Error ? error.message : String(error);
     core.warning(`docker-auth cleanup failed: ${message}`);
   }

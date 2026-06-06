@@ -1,18 +1,5 @@
 import * as core from "@actions/core";
-import { ReocloClient } from "./client.js";
-import type { RunContext } from "./types.js";
-
-function buildRunContext(): RunContext {
-  return {
-    provider: "github_actions",
-    repository: process.env["GITHUB_REPOSITORY"] ?? "",
-    workflow: process.env["GITHUB_WORKFLOW"] ?? "",
-    trigger: process.env["GITHUB_EVENT_NAME"] ?? "",
-    actor: process.env["GITHUB_ACTOR"] ?? "",
-    sha: process.env["GITHUB_SHA"],
-    ref: process.env["GITHUB_REF"],
-  };
-}
+import { ensureCli, runReoclo } from "./cli.js";
 
 type AuthMode = "vault" | "passthrough";
 
@@ -20,6 +7,10 @@ interface ResolvedMode {
   mode: AuthMode;
 }
 
+/**
+ * Mirror the reoclo CLI's resolveAuthMode semantics: vault and passthrough are
+ * mutually exclusive; passthrough requires all three of username/access_token/registry_url.
+ */
 function resolveAuthMode(
   credentialId: string,
   username: string,
@@ -57,13 +48,19 @@ function resolveAuthMode(
   return { mode: hasCredential ? "vault" : "passthrough" };
 }
 
+interface LoginOutput {
+  operation_id: string;
+  registry_url: string;
+  registry_type: string;
+}
+
 async function run(): Promise<void> {
   try {
     const apiKey = core.getInput("api_key", { required: true });
     const serverId = core.getInput("server_id", { required: true });
     const credentialId = core.getInput("credential_id");
     const username = core.getInput("username");
-    // Mask the access token immediately before any other code path can log it
+    // Mask the access token immediately before any other code path can log it.
     const accessToken = core.getInput("access_token");
     if (accessToken) {
       core.setSecret(accessToken);
@@ -74,67 +71,65 @@ async function run(): Promise<void> {
 
     const { mode } = resolveAuthMode(credentialId, username, accessToken, registryUrl);
 
-    const client = new ReocloClient(apiKey, apiUrl);
+    ensureCli();
 
-    let loginOperationId: string;
-    let loginRegistryUrl: string;
-    let loginRegistryType: string;
-
+    // Build the reoclo argv. Secrets (access_token) are passed as discrete argv
+    // entries — never interpolated into a shell string.
+    const args = ["registry", "login", serverId];
     if (mode === "vault") {
       core.info(`Logging in to Reoclo registry credential ${credentialId}...`);
-      const loginResponse = await client.loginRegistry({
-        server_id: serverId,
-        credential_id: credentialId,
-        run_id: process.env["GITHUB_RUN_ID"],
-        run_context: buildRunContext(),
-      });
-      loginOperationId = loginResponse.operation_id;
-      loginRegistryUrl = loginResponse.registry_url;
-      loginRegistryType = loginResponse.registry_type;
+      args.push("--credential", credentialId);
     } else {
       core.info(`Logging in to ${registryUrl} via passthrough mode...`);
-      const loginResponse = await client.loginRegistryDirect({
-        server_id: serverId,
-        registry_url: registryUrl,
+      args.push(
+        "--username",
         username,
-        access_token: accessToken,
-        run_id: process.env["GITHUB_RUN_ID"],
-        run_context: buildRunContext(),
-      });
-      loginOperationId = loginResponse.operation_id;
-      loginRegistryUrl = loginResponse.registry_url;
-      loginRegistryType = loginResponse.registry_type;
+        "--access-token",
+        accessToken,
+        "--registry-url",
+        registryUrl,
+      );
     }
+    args.push("--output", "json");
 
-    core.setOutput("operation_id", loginOperationId);
-    core.setOutput("registry_url", loginRegistryUrl);
-    core.setOutput("registry_type", loginRegistryType);
+    const env: NodeJS.ProcessEnv = {
+      ...process.env,
+      REOCLO_AUTOMATION_KEY: apiKey,
+      REOCLO_API_URL: apiUrl,
+    };
 
-    core.info(`Operation ${loginOperationId} submitted, polling for completion...`);
-
-    const detail = await client.pollUntilComplete(loginOperationId, (update) => {
-      core.info(`Operation status: ${update.status}`);
-    });
-    const result = detail.result ?? {};
-    const exitCode = result.exit_code ?? 1;
-
-    if (result.stdout) core.info(result.stdout);
-    if (result.stderr) core.warning(result.stderr);
-
-    if (exitCode !== 0) {
-      core.setFailed(`docker login failed with exit code ${exitCode}`);
+    const result = runReoclo(args, env);
+    if (result.status !== 0) {
+      // stderr may contain a CLI error message; access_token is masked by setSecret.
+      const detail = (result.stderr || result.stdout).trim();
+      core.setFailed(`reoclo registry login failed (exit ${result.status}): ${detail}`);
       return;
     }
 
-    core.info(`Logged in to ${loginRegistryUrl} on server ${serverId}`);
+    let parsed: LoginOutput;
+    try {
+      parsed = JSON.parse(result.stdout) as LoginOutput;
+    } catch {
+      core.setFailed(`Failed to parse reoclo login output as JSON: ${result.stdout.trim()}`);
+      return;
+    }
 
-    // Wire the post step — only after a successful login
+    core.setOutput("operation_id", parsed.operation_id);
+    core.setOutput("registry_url", parsed.registry_url);
+    core.setOutput("registry_type", parsed.registry_type);
+
+    core.info(`Logged in to ${parsed.registry_url} on server ${serverId}`);
+
+    // Wire the post step — only after a successful login. Inputs are not
+    // available in the post step, so the values it needs are saved as state.
+    // Re-mask the api_key before saving (state is not printed, but defensive).
+    core.setSecret(apiKey);
     core.saveState("login_performed", "true");
+    core.saveState("cleanup", cleanup ? "true" : "false");
     core.saveState("server_id", serverId);
+    core.saveState("registry_url", parsed.registry_url);
     core.saveState("api_key", apiKey);
     core.saveState("api_url", apiUrl);
-    core.saveState("registry_url", loginRegistryUrl);
-    core.saveState("cleanup", cleanup ? "true" : "false");
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     core.setFailed(`docker-auth failed: ${message}`);

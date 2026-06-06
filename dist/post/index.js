@@ -4,7 +4,7 @@ import './sourcemap-register.cjs';import { createRequire as __WEBPACK_EXTERNAL_c
 /***/ 329:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
-module.exports = __nccwpck_require__(4179);
+/* unused reexport */ __nccwpck_require__(4179);
 
 
 /***/ }),
@@ -24,10 +24,10 @@ var assert = __nccwpck_require__(2613);
 var util = __nccwpck_require__(9023);
 
 
-exports.httpOverHttp = httpOverHttp;
-exports.httpsOverHttp = httpsOverHttp;
-exports.httpOverHttps = httpOverHttps;
-exports.httpsOverHttps = httpsOverHttps;
+__webpack_unused_export__ = httpOverHttp;
+__webpack_unused_export__ = httpsOverHttp;
+__webpack_unused_export__ = httpOverHttps;
+__webpack_unused_export__ = httpsOverHttps;
 
 
 function httpOverHttp(options) {
@@ -317,7 +317,7 @@ __webpack_unused_export__ = Client
 __webpack_unused_export__ = Pool
 __webpack_unused_export__ = BalancedPool
 __webpack_unused_export__ = Agent
-module.exports.kT = ProxyAgent
+__webpack_unused_export__ = ProxyAgent
 __webpack_unused_export__ = EnvHttpProxyAgent
 __webpack_unused_export__ = RetryAgent
 __webpack_unused_export__ = RetryHandler
@@ -27969,64 +27969,6 @@ module.exports = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("util");
 /******/ }
 /******/ 
 /************************************************************************/
-/******/ /* webpack/runtime/create fake namespace object */
-/******/ (() => {
-/******/ 	var getProto = Object.getPrototypeOf ? (obj) => (Object.getPrototypeOf(obj)) : (obj) => (obj.__proto__);
-/******/ 	var leafPrototypes;
-/******/ 	// create a fake namespace object
-/******/ 	// mode & 1: value is a module id, require it
-/******/ 	// mode & 2: merge all properties of value into the ns
-/******/ 	// mode & 4: return value when already ns object
-/******/ 	// mode & 16: return value when it's Promise-like
-/******/ 	// mode & 8|1: behave like require
-/******/ 	__nccwpck_require__.t = function(value, mode) {
-/******/ 		if(mode & 1) value = this(value);
-/******/ 		if(mode & 8) return value;
-/******/ 		if(typeof value === 'object' && value) {
-/******/ 			if((mode & 4) && value.__esModule) return value;
-/******/ 			if((mode & 16) && typeof value.then === 'function') return value;
-/******/ 		}
-/******/ 		var ns = Object.create(null);
-/******/ 		__nccwpck_require__.r(ns);
-/******/ 		var def = {};
-/******/ 		leafPrototypes = leafPrototypes || [null, getProto({}), getProto([]), getProto(getProto)];
-/******/ 		for(var current = mode & 2 && value; typeof current == 'object' && !~leafPrototypes.indexOf(current); current = getProto(current)) {
-/******/ 			Object.getOwnPropertyNames(current).forEach((key) => (def[key] = () => (value[key])));
-/******/ 		}
-/******/ 		def['default'] = () => (value);
-/******/ 		__nccwpck_require__.d(ns, def);
-/******/ 		return ns;
-/******/ 	};
-/******/ })();
-/******/ 
-/******/ /* webpack/runtime/define property getters */
-/******/ (() => {
-/******/ 	// define getter functions for harmony exports
-/******/ 	__nccwpck_require__.d = (exports, definition) => {
-/******/ 		for(var key in definition) {
-/******/ 			if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 				Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 			}
-/******/ 		}
-/******/ 	};
-/******/ })();
-/******/ 
-/******/ /* webpack/runtime/hasOwnProperty shorthand */
-/******/ (() => {
-/******/ 	__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ })();
-/******/ 
-/******/ /* webpack/runtime/make namespace object */
-/******/ (() => {
-/******/ 	// define __esModule on exports
-/******/ 	__nccwpck_require__.r = (exports) => {
-/******/ 		if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 			Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 		}
-/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 	};
-/******/ })();
-/******/ 
 /******/ /* webpack/runtime/compat */
 /******/ 
 /******/ if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = new URL('.', import.meta.url).pathname.slice(import.meta.url.match(/^file:\/\/\/\w:/) ? 1 : 0, -1) + "/";
@@ -28181,10 +28123,10 @@ function file_command_issueFileCommand(command, message) {
     if (!filePath) {
         throw new Error(`Unable to find environment variable for file command ${command}`);
     }
-    if (!fs.existsSync(filePath)) {
+    if (!external_fs_namespaceObject.existsSync(filePath)) {
         throw new Error(`Missing file at path: ${filePath}`);
     }
-    fs.appendFileSync(filePath, `${toCommandValue(message)}${os.EOL}`, {
+    external_fs_namespaceObject.appendFileSync(filePath, `${utils_toCommandValue(message)}${external_os_namespaceObject.EOL}`, {
         encoding: 'utf8'
     });
 }
@@ -28207,10 +28149,8 @@ function file_command_prepareKeyValueMessage(key, value) {
 const external_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("path");
 // EXTERNAL MODULE: external "http"
 var external_http_ = __nccwpck_require__(8611);
-var external_http_namespaceObject = /*#__PURE__*/__nccwpck_require__.t(external_http_, 2);
 // EXTERNAL MODULE: external "https"
 var external_https_ = __nccwpck_require__(5692);
-var external_https_namespaceObject = /*#__PURE__*/__nccwpck_require__.t(external_https_, 2);
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/@actions+http-client@4.0.1/node_modules/@actions/http-client/lib/proxy.js
 function getProxyUrl(reqUrl) {
     const usingSsl = reqUrl.protocol === 'https:';
@@ -28303,7 +28243,7 @@ class DecodedURL extends URL {
 }
 //# sourceMappingURL=proxy.js.map
 // EXTERNAL MODULE: ./node_modules/.pnpm/tunnel@0.0.6/node_modules/tunnel/index.js
-var tunnel = __nccwpck_require__(329);
+var node_modules_tunnel = __nccwpck_require__(329);
 // EXTERNAL MODULE: ./node_modules/.pnpm/undici@6.25.0/node_modules/undici/index.js
 var undici = __nccwpck_require__(9522);
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/@actions+http-client@4.0.1/node_modules/@actions/http-client/lib/index.js
@@ -28381,7 +28321,7 @@ const HttpResponseRetryCodes = [
     HttpCodes.ServiceUnavailable,
     HttpCodes.GatewayTimeout
 ];
-const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
+const RetryableHttpVerbs = (/* unused pure expression or super */ null && (['OPTIONS', 'GET', 'DELETE', 'HEAD']));
 const ExponentialBackoffCeiling = 10;
 const ExponentialBackoffTimeSlice = 5;
 class HttpClientError extends Error {
@@ -28730,7 +28670,7 @@ class lib_HttpClient {
     }
     getAgentDispatcher(serverUrl) {
         const parsedUrl = new URL(serverUrl);
-        const proxyUrl = getProxyUrl(parsedUrl);
+        const proxyUrl = pm.getProxyUrl(parsedUrl);
         const useProxy = proxyUrl && proxyUrl.hostname;
         if (!useProxy) {
             return;
@@ -28741,7 +28681,7 @@ class lib_HttpClient {
         const info = {};
         info.parsedUrl = requestUrl;
         const usingSsl = info.parsedUrl.protocol === 'https:';
-        info.httpModule = usingSsl ? external_https_namespaceObject : external_http_namespaceObject;
+        info.httpModule = usingSsl ? https : http;
         const defaultPort = usingSsl ? 443 : 80;
         info.options = {};
         info.options.host = info.parsedUrl.hostname;
@@ -28840,7 +28780,7 @@ class lib_HttpClient {
     }
     _getAgent(parsedUrl) {
         let agent;
-        const proxyUrl = getProxyUrl(parsedUrl);
+        const proxyUrl = pm.getProxyUrl(parsedUrl);
         const useProxy = proxyUrl && proxyUrl.hostname;
         if (this._keepAlive && useProxy) {
             agent = this._proxyAgent;
@@ -28855,7 +28795,7 @@ class lib_HttpClient {
         const usingSsl = parsedUrl.protocol === 'https:';
         let maxSockets = 100;
         if (this.requestOptions) {
-            maxSockets = this.requestOptions.maxSockets || external_http_.globalAgent.maxSockets;
+            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
         }
         // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
         if (proxyUrl && proxyUrl.hostname) {
@@ -28880,7 +28820,7 @@ class lib_HttpClient {
         // if tunneling agent isn't assigned create a new agent
         if (!agent) {
             const options = { keepAlive: this._keepAlive, maxSockets };
-            agent = usingSsl ? new external_https_.Agent(options) : new external_http_.Agent(options);
+            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
             this._agent = agent;
         }
         if (usingSsl && this._ignoreSslError) {
@@ -28903,7 +28843,7 @@ class lib_HttpClient {
             return proxyAgent;
         }
         const usingSsl = parsedUrl.protocol === 'https:';
-        proxyAgent = new undici/* ProxyAgent */.kT(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
+        proxyAgent = new ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
             token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString('base64')}`
         })));
         this._proxyAgentDispatcher = proxyAgent;
@@ -30741,7 +30681,7 @@ function exportVariable(name, val) {
  * ```
  */
 function core_setSecret(secret) {
-    issueCommand('add-mask', {}, secret);
+    command_issueCommand('add-mask', {}, secret);
 }
 /**
  * Prepends inputPath to the PATH (for this action and future actions)
@@ -30750,12 +30690,12 @@ function core_setSecret(secret) {
 function addPath(inputPath) {
     const filePath = process.env['GITHUB_PATH'] || '';
     if (filePath) {
-        issueFileCommand('PATH', inputPath);
+        file_command_issueFileCommand('PATH', inputPath);
     }
     else {
-        issueCommand('add-path', {}, inputPath);
+        command_issueCommand('add-path', {}, inputPath);
     }
-    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
+    process.env['PATH'] = `${inputPath}${external_path_namespaceObject.delimiter}${process.env['PATH']}`;
 }
 /**
  * Gets the value of an input.
@@ -30981,89 +30921,95 @@ function getIDToken(aud) {
  */
 
 //# sourceMappingURL=core.js.map
-;// CONCATENATED MODULE: ./src/client.ts
+;// CONCATENATED MODULE: external "node:child_process"
+const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
+;// CONCATENATED MODULE: external "node:os"
+const external_node_os_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:os");
+;// CONCATENATED MODULE: external "node:path"
+const external_node_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:path");
+;// CONCATENATED MODULE: ./src/cli.ts
 
-const POLL_INTERVAL_MS = 5_000;
-class ReocloClient {
-    http;
-    baseUrl;
-    constructor(apiKey, apiUrl) {
-        this.baseUrl = apiUrl.replace(/\/+$/, "");
-        this.http = new lib_HttpClient("reoclo-docker-auth-action", [], {
-            headers: {
-                Authorization: `Bearer ${apiKey}`,
-                "Content-Type": "application/json",
-            },
-        });
+
+
+
+const REOCLO_VERSION = "0.44.0";
+const REOCLO_PIN = `v${REOCLO_VERSION}`;
+const INSTALL_URL = `https://github.com/reoclo/cli/releases/download/${REOCLO_PIN}/install.sh`;
+/**
+ * Run a command with an explicit argv array (never a shell string), so secrets
+ * passed as arguments cannot be interpolated by a shell or leak via shell tracing.
+ */
+function runProcess(command, args, env) {
+    const result = (0,external_node_child_process_namespaceObject.spawnSync)(command, args, {
+        env: env ?? process.env,
+        encoding: "utf8",
+        maxBuffer: 16 * 1024 * 1024,
+    });
+    if (result.error) {
+        throw result.error;
     }
-    async loginRegistry(request) {
-        const url = `${this.baseUrl}/api/automation/v1/registry-auth/login`;
-        const response = await this.http.postJson(url, request);
-        if (response.statusCode !== 202 && response.statusCode !== 200) {
-            throw new Error(`Reoclo API returned ${response.statusCode}: ${JSON.stringify(response.result)}`);
+    return {
+        status: result.status ?? 1,
+        stdout: result.stdout ?? "",
+        stderr: result.stderr ?? "",
+    };
+}
+/** Return the installed reoclo version string, or null if reoclo is not on PATH. */
+function installedVersion() {
+    try {
+        const result = (0,external_node_child_process_namespaceObject.spawnSync)("reoclo", ["--version"], { encoding: "utf8" });
+        if (result.status !== 0 || typeof result.stdout !== "string") {
+            return null;
         }
-        if (!response.result) {
-            throw new Error("Reoclo API returned empty response");
-        }
-        return response.result;
+        return result.stdout.trim();
     }
-    async loginRegistryDirect(request) {
-        const url = `${this.baseUrl}/api/automation/v1/registry-auth/login-direct`;
-        const response = await this.http.postJson(url, request);
-        if (response.statusCode !== 202 && response.statusCode !== 200) {
-            throw new Error(`Reoclo API returned ${response.statusCode}: ${JSON.stringify(response.result)}`);
-        }
-        if (!response.result) {
-            throw new Error("Reoclo API returned empty response");
-        }
-        return response.result;
-    }
-    async logoutRegistry(request) {
-        const url = `${this.baseUrl}/api/automation/v1/registry-auth/logout`;
-        const response = await this.http.postJson(url, request);
-        if (response.statusCode !== 200) {
-            throw new Error(`Reoclo API returned ${response.statusCode}: ${JSON.stringify(response.result)}`);
-        }
-    }
-    async getOperation(operationId) {
-        const url = `${this.baseUrl}/api/automation/v1/operations/${operationId}`;
-        const response = await this.http.getJson(url);
-        if (response.statusCode !== 200) {
-            throw new Error(`Reoclo API returned ${response.statusCode}: ${JSON.stringify(response.result)}`);
-        }
-        if (!response.result) {
-            throw new Error("Reoclo API returned empty response");
-        }
-        return response.result;
-    }
-    async pollUntilComplete(operationId, onUpdate) {
-        for (;;) {
-            await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-            const detail = await this.getOperation(operationId);
-            if (onUpdate) {
-                onUpdate(detail);
-            }
-            if (detail.status !== "running") {
-                return detail;
-            }
-        }
+    catch {
+        return null;
     }
 }
+/**
+ * Ensure the pinned reoclo CLI (v0.43.1) is installed and on PATH.
+ * Skips the install if `reoclo --version` already reports the pinned version.
+ */
+function ensureCli() {
+    if (installedVersion() === REOCLO_VERSION) {
+        info(`reoclo ${REOCLO_VERSION} already present`);
+        return;
+    }
+    const runnerTemp = process.env["RUNNER_TEMP"] || external_node_os_namespaceObject.tmpdir();
+    const installDir = external_node_path_namespaceObject.join(runnerTemp, "reoclo-bin");
+    info(`Installing reoclo ${REOCLO_PIN} into ${installDir}...`);
+    // Download install.sh and pipe it into `sh` over stdin, then pass the pin and
+    // install options as argv. No secrets are involved here.
+    const script = runProcess("curl", ["-fsSL", INSTALL_URL]);
+    if (script.status !== 0) {
+        throw new Error(`Failed to download reoclo install.sh (exit ${script.status}): ${script.stderr}`);
+    }
+    const install = (0,external_node_child_process_namespaceObject.spawnSync)("sh", ["-s", "--", "--version", REOCLO_PIN, "--install-dir", installDir, "--no-modify-path"], { input: script.stdout, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+    if (install.error) {
+        throw install.error;
+    }
+    if ((install.status ?? 1) !== 0) {
+        throw new Error(`reoclo install.sh failed (exit ${install.status}): ${install.stderr ?? ""}`);
+    }
+    addPath(installDir);
+}
+/**
+ * Run a reoclo subcommand with an argv array. The reoclo binary is resolved via
+ * PATH (which ensureCli updates). Returns the captured stdout/stderr and status.
+ */
+function runReoclo(args, env) {
+    const installDir = external_node_path_namespaceObject.join(process.env["RUNNER_TEMP"] || external_node_os_namespaceObject.tmpdir(), "reoclo-bin");
+    // Prepend the install dir to PATH for this process, since core.addPath only
+    // affects subsequent steps, not the current process's child spawns.
+    const mergedPath = `${installDir}${external_node_path_namespaceObject.delimiter}${process.env["PATH"] ?? ""}`;
+    return runProcess("reoclo", args, { ...env, PATH: mergedPath });
+}
+
 
 ;// CONCATENATED MODULE: ./src/post.ts
 
 
-function buildRunContext() {
-    return {
-        provider: "github_actions",
-        repository: process.env["GITHUB_REPOSITORY"] ?? "",
-        workflow: process.env["GITHUB_WORKFLOW"] ?? "",
-        trigger: process.env["GITHUB_EVENT_NAME"] ?? "",
-        actor: process.env["GITHUB_ACTOR"] ?? "",
-        sha: process.env["GITHUB_SHA"],
-        ref: process.env["GITHUB_REF"],
-    };
-}
 async function post() {
     if (getState("login_performed") !== "true") {
         return;
@@ -31079,18 +31025,25 @@ async function post() {
         warning("docker-auth cleanup skipped: post-step state missing (login step likely failed)");
         return;
     }
+    // Re-mask the api_key defensively in the post step's log context.
+    core_setSecret(apiKey);
     try {
-        const client = new ReocloClient(apiKey, apiUrl);
-        await client.logoutRegistry({
-            server_id: serverId,
-            registry_url: registryUrl,
-            run_id: process.env["GITHUB_RUN_ID"],
-            run_context: buildRunContext(),
-        });
+        ensureCli();
+        const env = {
+            ...process.env,
+            REOCLO_AUTOMATION_KEY: apiKey,
+            REOCLO_API_URL: apiUrl,
+        };
+        const result = runReoclo(["registry", "logout", serverId, "--registry-url", registryUrl], env);
+        if (result.status !== 0) {
+            const detail = (result.stderr || result.stdout).trim();
+            warning(`docker-auth cleanup failed (exit ${result.status}): ${detail}`);
+            return;
+        }
         info(`Logged out of ${registryUrl}`);
     }
     catch (error) {
-        // Cleanup failure should never fail the job — matches actions/cache convention
+        // Cleanup failure should never fail the job — matches actions/cache convention.
         const message = error instanceof Error ? error.message : String(error);
         warning(`docker-auth cleanup failed: ${message}`);
     }
