@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import * as os from "node:os";
 import * as path from "node:path";
 import * as core from "@actions/core";
@@ -6,6 +7,9 @@ import * as core from "@actions/core";
 const REOCLO_VERSION = "0.44.0";
 const REOCLO_PIN = `v${REOCLO_VERSION}`;
 const INSTALL_URL = `https://github.com/reoclo/cli/releases/download/${REOCLO_PIN}/install.sh`;
+// SHA-256 of the pinned release's install.sh (stable across releases). Verified
+// before execution; the installer then verifies the binary against SHA256SUMS.
+const INSTALL_SHA256 = "2ea6c2766d2cf5def9a022ed255874f9a48ce1da5184a36df9e8e547a98cfa94";
 
 interface RunResult {
   status: number;
@@ -60,17 +64,29 @@ export function ensureCli(): void {
   const installDir = path.join(runnerTemp, "reoclo-bin");
 
   core.info(`Installing reoclo ${REOCLO_PIN} into ${installDir}...`);
-  // Download install.sh and pipe it into `sh` over stdin, then pass the pin and
-  // install options as argv. No secrets are involved here.
-  const script = runProcess("curl", ["-fsSL", INSTALL_URL]);
-  if (script.status !== 0) {
-    throw new Error(`Failed to download reoclo install.sh (exit ${script.status}): ${script.stderr}`);
+  // Download install.sh as raw bytes and verify it against the pinned checksum
+  // before executing it. The installer then verifies the binary via SHA256SUMS.
+  const script = spawnSync("curl", ["-fsSL", INSTALL_URL], { maxBuffer: 16 * 1024 * 1024 });
+  if (script.error) {
+    throw script.error;
+  }
+  if ((script.status ?? 1) !== 0) {
+    throw new Error(
+      `Failed to download reoclo install.sh (exit ${script.status}): ${String(script.stderr ?? "")}`,
+    );
+  }
+  const scriptBuf = script.stdout as Buffer;
+  const actualSha = createHash("sha256").update(scriptBuf).digest("hex");
+  if (actualSha !== INSTALL_SHA256) {
+    throw new Error(
+      `reoclo install.sh checksum mismatch: expected ${INSTALL_SHA256}, got ${actualSha}`,
+    );
   }
 
   const install = spawnSync(
     "sh",
     ["-s", "--", "--version", REOCLO_PIN, "--install-dir", installDir, "--no-modify-path"],
-    { input: script.stdout, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
+    { input: scriptBuf, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 },
   );
   if (install.error) {
     throw install.error;

@@ -30946,6 +30946,8 @@ function getIDToken(aud) {
 //# sourceMappingURL=core.js.map
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:child_process");
+// EXTERNAL MODULE: external "node:crypto"
+var external_node_crypto_ = __nccwpck_require__(7598);
 ;// CONCATENATED MODULE: external "node:os"
 const external_node_os_namespaceObject = __WEBPACK_EXTERNAL_createRequire(import.meta.url)("node:os");
 ;// CONCATENATED MODULE: external "node:path"
@@ -30955,9 +30957,13 @@ const external_node_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(impo
 
 
 
+
 const REOCLO_VERSION = "0.44.0";
 const REOCLO_PIN = `v${REOCLO_VERSION}`;
 const INSTALL_URL = `https://github.com/reoclo/cli/releases/download/${REOCLO_PIN}/install.sh`;
+// SHA-256 of the pinned release's install.sh (stable across releases). Verified
+// before execution; the installer then verifies the binary against SHA256SUMS.
+const INSTALL_SHA256 = "2ea6c2766d2cf5def9a022ed255874f9a48ce1da5184a36df9e8e547a98cfa94";
 /**
  * Run a command with an explicit argv array (never a shell string), so secrets
  * passed as arguments cannot be interpolated by a shell or leak via shell tracing.
@@ -31002,13 +31008,21 @@ function ensureCli() {
     const runnerTemp = process.env["RUNNER_TEMP"] || external_node_os_namespaceObject.tmpdir();
     const installDir = external_node_path_namespaceObject.join(runnerTemp, "reoclo-bin");
     info(`Installing reoclo ${REOCLO_PIN} into ${installDir}...`);
-    // Download install.sh and pipe it into `sh` over stdin, then pass the pin and
-    // install options as argv. No secrets are involved here.
-    const script = runProcess("curl", ["-fsSL", INSTALL_URL]);
-    if (script.status !== 0) {
-        throw new Error(`Failed to download reoclo install.sh (exit ${script.status}): ${script.stderr}`);
+    // Download install.sh as raw bytes and verify it against the pinned checksum
+    // before executing it. The installer then verifies the binary via SHA256SUMS.
+    const script = (0,external_node_child_process_namespaceObject.spawnSync)("curl", ["-fsSL", INSTALL_URL], { maxBuffer: 16 * 1024 * 1024 });
+    if (script.error) {
+        throw script.error;
     }
-    const install = (0,external_node_child_process_namespaceObject.spawnSync)("sh", ["-s", "--", "--version", REOCLO_PIN, "--install-dir", installDir, "--no-modify-path"], { input: script.stdout, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
+    if ((script.status ?? 1) !== 0) {
+        throw new Error(`Failed to download reoclo install.sh (exit ${script.status}): ${String(script.stderr ?? "")}`);
+    }
+    const scriptBuf = script.stdout;
+    const actualSha = (0,external_node_crypto_.createHash)("sha256").update(scriptBuf).digest("hex");
+    if (actualSha !== INSTALL_SHA256) {
+        throw new Error(`reoclo install.sh checksum mismatch: expected ${INSTALL_SHA256}, got ${actualSha}`);
+    }
+    const install = (0,external_node_child_process_namespaceObject.spawnSync)("sh", ["-s", "--", "--version", REOCLO_PIN, "--install-dir", installDir, "--no-modify-path"], { input: scriptBuf, encoding: "utf8", maxBuffer: 16 * 1024 * 1024 });
     if (install.error) {
         throw install.error;
     }
