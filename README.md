@@ -1,5 +1,10 @@
 # Reoclo Docker Auth (`@reoclo/docker-auth`)
 
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Reoclo%20Docker%20Auth-2188ff?logo=github&logoColor=white)](https://github.com/marketplace/actions/reoclo-docker-auth)
+[![Release](https://img.shields.io/github/v/release/reoclo/docker-auth?logo=github&label=release&color=2188ff&sort=semver)](https://github.com/reoclo/docker-auth/releases/latest)
+[![CI](https://github.com/reoclo/docker-auth/actions/workflows/ci.yml/badge.svg)](https://github.com/reoclo/docker-auth/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
 Log in to a container registry on a [Reoclo](https://reoclo.com) managed server using a registry credential stored in your Reoclo tenant.
 
 Pairs with [`@reoclo/run`](https://github.com/reoclo/run) and [`@reoclo/checkout`](https://github.com/reoclo/checkout) for full CI workflows that build, push, and pull from private registries without copying passwords into GitHub Secrets.
