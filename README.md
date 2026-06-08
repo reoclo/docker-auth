@@ -9,7 +9,7 @@ Log in to a container registry on a [Reoclo](https://reoclo.com) managed server 
 
 Pairs with [`@reoclo/run`](https://github.com/reoclo/run) and [`@reoclo/checkout`](https://github.com/reoclo/checkout) for full CI workflows that build, push, and pull from private registries without copying passwords into GitHub Secrets.
 
-> **v2 wraps the `reoclo` CLI.** As of `@v2`, this action is a thin wrapper around the published [`reoclo` CLI](https://github.com/reoclo/cli) (pinned to `v0.43.1`). On first run it installs the pinned CLI into `$RUNNER_TEMP` and then shells out to `reoclo registry login`/`reoclo registry logout`. It remains a JavaScript action (not composite) so the automatic `docker logout` cleanup can run as a `post:` step. Inputs, outputs, and behavior are unchanged from `@v1`.
+> **v2 wraps the `reoclo` CLI.** As of `@v2`, this action is a thin wrapper around the published [`reoclo` CLI](https://github.com/reoclo/cli) (pinned to `v0.44.2`). On first run it installs the pinned CLI into `$RUNNER_TEMP` and then shells out to `reoclo registry login`/`reoclo registry logout`. It remains a JavaScript action (not composite) so the automatic `docker logout` cleanup can run as a `post:` step. Inputs, outputs, and behavior are unchanged from `@v1`.
 
 ## Why
 
@@ -161,7 +161,7 @@ The cleanup `post:` step (automatic `docker logout`) and all inputs/outputs beha
 
 ## How It Works
 
-1. On first run, the action installs the pinned `reoclo` CLI (`v0.43.1`) into `$RUNNER_TEMP` and adds it to `PATH`. If the pinned version is already present it is reused.
+1. On first run, the action installs the pinned `reoclo` CLI (`v0.44.2`) into `$RUNNER_TEMP` and adds it to `PATH`. If the pinned version is already present it is reused.
 2. The action shells out to `reoclo registry login <server_id>` (with `--credential <uuid>` for vault mode, or `--username/--access-token/--registry-url` for passthrough mode), authenticating via the `REOCLO_AUTOMATION_KEY` and `REOCLO_API_URL` environment variables. Arguments are passed as an argv array, never a shell string, so the access token never touches a shell command line.
 3. The CLI calls the Reoclo API, which resolves the credential, looks up the target server, and dispatches a `docker login` to the runner agent on that server. The runner executes the login locally — the password never leaves your Reoclo tenant.
 4. On job end, the `post:` step runs `reoclo registry logout <server_id> --registry-url <resolved url>` to clean up. Cleanup is best-effort: a logout failure logs a warning but never fails the job.

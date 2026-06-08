@@ -1,11 +1,11 @@
-declare const REOCLO_VERSION = "0.44.1";
+declare const REOCLO_VERSION = "0.44.2";
 interface RunResult {
     status: number;
     stdout: string;
     stderr: string;
 }
 /**
- * Ensure the pinned reoclo CLI (v0.43.1) is installed and on PATH.
+ * Ensure the pinned reoclo CLI (v0.44.2) is installed and on PATH.
  * Skips the install if `reoclo --version` already reports the pinned version.
  */
 export declare function ensureCli(): void;

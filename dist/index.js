@@ -30958,7 +30958,7 @@ const external_node_path_namespaceObject = __WEBPACK_EXTERNAL_createRequire(impo
 
 
 
-const REOCLO_VERSION = "0.44.1";
+const REOCLO_VERSION = "0.44.2";
 const REOCLO_PIN = `v${REOCLO_VERSION}`;
 const INSTALL_URL = `https://github.com/reoclo/cli/releases/download/${REOCLO_PIN}/install.sh`;
 // SHA-256 of the pinned release's install.sh (stable across releases). Verified
@@ -30997,7 +30997,7 @@ function installedVersion() {
     }
 }
 /**
- * Ensure the pinned reoclo CLI (v0.43.1) is installed and on PATH.
+ * Ensure the pinned reoclo CLI (v0.44.2) is installed and on PATH.
  * Skips the install if `reoclo --version` already reports the pinned version.
  */
 function ensureCli() {
