@@ -3,7 +3,7 @@
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Reoclo%20Docker%20Auth-2188ff?logo=github&logoColor=white)](https://github.com/marketplace/actions/reoclo-docker-auth)
 [![Release](https://img.shields.io/github/v/release/reoclo/docker-auth?logo=github&label=release&color=2188ff&sort=semver)](https://github.com/reoclo/docker-auth/releases/latest)
 [![CI](https://github.com/reoclo/docker-auth/actions/workflows/ci.yml/badge.svg)](https://github.com/reoclo/docker-auth/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 Log in to a container registry on a [Reoclo](https://reoclo.com) managed server using a registry credential stored in your Reoclo tenant.
 
@@ -187,4 +187,4 @@ The cleanup `post:` step (automatic `docker logout`) and all inputs/outputs beha
 
 ## License
 
-MIT
+Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
